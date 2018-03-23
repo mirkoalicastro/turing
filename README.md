@@ -1,9 +1,10 @@
 <h1><a id="Turing_0"></a>Turing</h1>
 <blockquote>
 <p>A Non-Deterministic Multi-Tape Turing<br>
-machine is like a Turing machine but it has<br>
-several tapes and its set of rules may prescribe<br>
-more than one action to be performed for any given situation.</p>
+machine is like a Turing machine but it<br>
+has several tapes and its set of rules<br>
+may prescribe more than one action to<br>
+be performed for any given situation.</p>
 </blockquote>
 <h3><a id="What_is_it_7"></a>What is it?</h3>
 <p>It’s just another Turing machine simulator. It can handle non-deterministic events and there is no limit to tapes number.</p>
