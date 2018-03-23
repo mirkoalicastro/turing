@@ -64,7 +64,7 @@ public class Turing {
             return name().substring(0,1);
         }
     }
-    private static final char rightDirection = 'r', leftDirection = 'l', stopDirection = '-';
+    private static final char rightDirection = 'R', leftDirection = 'L', stopDirection = '-';
     private static final String initialState = "s";
     private final String input;
     private final int tapesNumber;

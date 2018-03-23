@@ -21,13 +21,13 @@ Then, each line consists of:</p>
 <li><strong>configuration</strong> is a sequence enclosed between two brackets where each elements is separated by a comma. The i-th element represents the character on the i-th tape;</li>
 <li><strong>relation</strong> is a relation (not necessarily a function). It is represented by a sequence enclosed between two brackets where each elements is separated by a comma. The first element is the <em>state</em> where the Turing machine will go if it is in the state <em>state</em> and has the configuration <em>configuration</em>. Then, there are a two elements of each tape. The first one, for each tape, represents the character which will be written by the head of this tape. The second one, for each tape, represents the direction where the head of this tape will go, in particular:
 <ul>
-<li><strong>r</strong> for right;</li>
-<li><strong>l</strong> for left;</li>
+<li><strong>R</strong> for right;</li>
+<li><strong>L</strong> for left;</li>
 <li><strong>-</strong> don’t move;</li>
 </ul>
 </li>
 </ul>
-<h4><a id="Reserved_Character_29"></a>Reserved Character</h4>
+<h4><a id="Reserved_Character_29"></a>Reserved Characters</h4>
 <table class="table table-striped table-bordered">
 <thead>
 <tr>
@@ -65,27 +65,33 @@ Then, each line consists of:</p>
 <h4><a id="An_example_39"></a>An example</h4>
 <p>Check if a binary string is a palindrome one.</p>
 <pre><code>001100
-s; (&gt;, &gt;); (s, &gt;, r, &gt;, r)
-s; (1, _); (s, 1, r, _, -)
-s; (1, _); (s, 1, r, 1, r)
-s; (0, _); (s, 0, r, _, -)
-s; (0, _); (s, 0, r, 1, r)
-s; (_, _); (b, _, l, _, l)
-b; (1,1); (b, 1, l, 1, l)
-b; (0,1); (b, 0, l, 1, l)
-b; (1, &gt;); (z1, 1, l, &gt;, -)
-b; (0, &gt;); (z0, 0, l, &gt;, -)
-b; (&gt;, &gt;); (N, &gt;, -, &gt;, -)
-z0; (1, &gt;); (z0, 1, l, &gt;, -)
-z0; (0, &gt;); (z0, 0, l, &gt;, -)
-z0; (&gt;, &gt;); (q0, &gt;, r, &gt;, r)
-z1; (1, &gt;); (z1, 1, l, &gt;, -)
-z1; (0, &gt;); (z1, 0, l, &gt;, -)
-z1; (&gt;, &gt;); (q1, &gt;, r, &gt;, r)
-q0; (1,1); (q0, 1, r, 1, r)
-q0; (0,1); (q0, 0, r, 1, r)
-q1; (1,1); (q1, 1, r, 1, r)
-q1; (0,1); (q1, 0, r, 1, r)
+s; (&gt;, &gt;); (s, &gt;, R, &gt;, R)
+s; (1, _); (s, 1, R, _, -)
+s; (1, _); (s, 1, R, 1, R)
+s; (0, _); (s, 0, R, _, -)
+s; (0, _); (s, 0, R, 1, R)
+s; (_, _); (b, _, L, _, L)
+b; (1,1); (b, 1, L, 1, L)
+b; (0,1); (b, 0, L, 1, L)
+b; (1, &gt;); (z1, 1, L, &gt;, R)
+b; (0, &gt;); (z0, 0, L, &gt;, R)
+b; (&gt;, &gt;); (N, &gt;, R, &gt;, R)
+z0; (1, 1); (z0, 1, L, 1, -)
+z0; (0, 1); (z0, 0, L, 1, -)
+z0; (&gt;, 1); (q0, &gt;, R, 1, -)
+z0; (1, _); (z0, 1, L, _, -)
+z0; (0, _); (z0, 0, L, _, -)
+z0; (&gt;, _); (q0, &gt;, R, _, -)
+z1; (1, 1); (z1, 1, L, 1, -)
+z1; (0, 1); (z1, 0, L, 1, -)
+z1; (&gt;, 1); (q1, &gt;, R, 1, -)
+z1; (1, _); (z1, 1, L, _, -)
+z1; (0, _); (z1, 0, L, _, -)
+z1; (&gt;, _); (q1, &gt;, R, _, -)
+q0; (1,1); (q0, 1, R, 1, R)
+q0; (0,1); (q0, 0, R, 1, R)
+q1; (1,1); (q1, 1, R, 1, R)
+q1; (0,1); (q1, 0, R, 1, R)
 q1; (1, _); (N, 1, -, _, -)
 q1; (0, _); (Y, 0, -, _, -)
 q0; (0, _); (N, 0, -, _, -)
