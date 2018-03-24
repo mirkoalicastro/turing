@@ -6,19 +6,45 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A Non-Deterministic Multi-Tape Turing machine is like a Turing machine but it has several tapes and its set of rules may prescribe more than one action to be performed for any given situation
  * @author Mirko Alicastro
  * @link https://github.com/mirkoalicastro/turing
- * @version 1.0
+ * @version 1.1
  */
 
 public class Turing {
 
+    private static class Stack {
+        final String[] tapes;
+        final int[] heads;
+        final String state;
+        Stack(String state, String[] tapes, int[] heads) {
+            this.state = state;
+            this.tapes = tapes;
+            this.heads = heads;
+        }
+        @Override
+        public boolean equals(Object x) {
+            if(x == null)
+                return false;
+            if(!(x instanceof Stack))
+                return false;
+            Stack s = (Stack) x;
+            return state.equals(s.state) && Arrays.equals(tapes, s.tapes) && Arrays.equals(heads, s.heads);
+        }
+        @Override
+        public int hashCode() {
+            return state.hashCode() ^ Arrays.hashCode(tapes) ^ Arrays.hashCode(heads);
+        }
+    }
+    
     /**
      * Output class is used to handle the (potentially) multiple outputs of the Turing machine.
      * Each Output object contains:
@@ -68,7 +94,6 @@ public class Turing {
     private static final String initialState = "s";
     private final String input;
     private final int tapesNumber;
-    private final List<Output> output = new ArrayList<>();
     private final Map<String, Map<String, Map<String,ArrayList<String>>>> relations = new HashMap<>();
 
     /**
@@ -150,6 +175,7 @@ public class Turing {
     public int getTapesNumber() {
         return tapesNumber;
     }
+    
     private static String encodeCurrentConfiguration(String s) {
         String ret = "(";
         char[] c = s.toCharArray();
@@ -157,8 +183,9 @@ public class Turing {
             ret += c[i] + ", ";
         return ret.substring(0, ret.length()-2) + ")";
     }
+    
     /**
-     * Run a simulation
+     * Run a complete simulation
      * @return a list of all the outputs of the simulation
      * @throws TuringException
      */
@@ -168,26 +195,54 @@ public class Turing {
     }
 
     /**
-     * Run a simulation with a customized input 
+     * Run a complete simulation with a customized input 
      * @param input customized input without initial symbol
      * @return a list of all the outputs of the simulation
      * @throws TuringException
      */
     
     public List<Output> run(String input) throws TuringException {
+        return run(input, false);
+    }
+    
+    /**
+     * Run a simulation
+     * @param optimize true if don't want to re-execute branches, false otherwise 
+     * @return a list of all the outputs of the simulation
+     * @throws TuringException
+     */
+    
+    public List<Output> run(boolean optimize) throws TuringException {
+        return run(input, optimize);
+    }
+    
+    /**
+     * Run an optimized or a complete simulation with a customized input
+     * @param input customized input without initial symbol
+     * @param optimize true if don't want to re-execute branches, false otherwise 
+     * @return a list of all the outputs of the simulation
+     * @throws TuringException
+     */
+    
+    public List<Output> run(String input, boolean optimize) throws TuringException {
         String[] tapes = new String[tapesNumber];
         int[] heads = new int[tapesNumber];
         for(int i=0; i<tapes.length; i++) {
             tapes[i] = ">" + (i==0 ? input : "");
             heads[i] = 0;
         }
-        run(tapes, heads, initialState);
-        List<Output> tmp = new ArrayList<>();
-        tmp.addAll(output);
-        output.clear();
-        return tmp;
+        List<Output> output = new ArrayList<>();
+        run(tapes, heads, initialState, output, optimize ? new HashSet<Stack>() : null);
+        return output;
     }
-    private void run(String[] tapes, int[] heads, String state) throws TuringException {
+    
+    private void run(String[] tapes, int[] heads, String state, List<Output> output, Set<Stack> yetExecuted) throws TuringException {
+        if(yetExecuted != null) {
+            Stack s = new Stack(state, tapes, heads);
+            if(yetExecuted.contains(s))
+                return;
+            yetExecuted.add(s);
+        }
         FINAL_STATE retState = null;
         if(state.equals(FINAL_STATE.YES.toString()))
             retState = FINAL_STATE.YES;
@@ -218,14 +273,10 @@ public class Turing {
             Iterator<String> it = go.get(newState).iterator();
             while(it.hasNext()) {
                 String newConfig = it.next();
-                String[] newTapes = tapes;
-                int[] newHeads = heads;
-                if(it.hasNext()) {
-                    newTapes = new String[tapesNumber];
-                    System.arraycopy(tapes, 0, newTapes, 0, tapesNumber);
-                    newHeads = new int[tapesNumber];
-                    System.arraycopy(heads, 0, newHeads, 0, tapesNumber);
-                }
+                String[] newTapes = new String[tapesNumber];
+                System.arraycopy(tapes, 0, newTapes, 0, tapesNumber);
+                int[] newHeads = new int[tapesNumber];
+                System.arraycopy(heads, 0, newHeads, 0, tapesNumber);
                 char[] tmp = newConfig.toCharArray();
                 for(int m=0, j=0; j<tmp.length; j+=2, m++) {
                     char dir = tmp[j+1];
@@ -242,13 +293,13 @@ public class Turing {
                         throw new TuringException("Cannot understand the following direction: " + dir);
                     }
                 }
-                run(newTapes, newHeads, newState);
+                run(newTapes, newHeads, newState, output, yetExecuted);
             }
         }
     }
     
     /**
-        This exception will be thrown by:
+        This exception may be thrown by:
         * <ul>
         * <li>Turing constructor, if the input file is a malformed input;</li>
         * <li>Turing run methods, if the program has an error</li>
