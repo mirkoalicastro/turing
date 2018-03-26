@@ -1,10 +1,12 @@
 package complexity;
 
+import complexity.datastructure.Bulk;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,37 +16,14 @@ import java.util.Set;
 
 /**
  * A Non-Deterministic Multi-Tape Turing machine is like a Turing machine but it has several tapes and its set of rules may prescribe more than one action to be performed for any given situation
+ * 
  * @author Mirko Alicastro
  * @link https://github.com/mirkoalicastro/turing
- * @version 1.1
+ * @version 1.2
  */
 
 public class Turing {
 
-    private static class Stack {
-        final String[] tapes;
-        final int[] heads;
-        final String state;
-        Stack(String state, String[] tapes, int[] heads) {
-            this.state = state;
-            this.tapes = tapes;
-            this.heads = heads;
-        }
-        @Override
-        public boolean equals(Object x) {
-            if(x == null)
-                return false;
-            if(!(x instanceof Stack))
-                return false;
-            Stack s = (Stack) x;
-            return state.equals(s.state) && Arrays.equals(tapes, s.tapes) && Arrays.equals(heads, s.heads);
-        }
-        @Override
-        public int hashCode() {
-            return state.hashCode() ^ Arrays.hashCode(tapes) ^ Arrays.hashCode(heads);
-        }
-    }
-    
     /**
      * Output class is used to handle the (potentially) multiple outputs of the Turing machine.
      * Each Output object contains:
@@ -56,17 +35,17 @@ public class Turing {
      */
     public static class Output {
         /**
-         * It represents the state for which the Turing machine stopped (YES, NO, HALT)
+         * It is the last state of the Turing machine (YES, NO, HALT)
          */
         public final FINAL_STATE state;
         /**
-         * The array as length equals to the number of tapes of the Turing machine that generated this Output object.
-         * It represents a snapshot of all the tapes when the Turing machine stopped
+         * It is a snapshot of all the tapes when the Turing machine stopped.
+         * The array has length equals to the number of tapes of the Turing machine that generated this Output object
          */
         public final String[] tapes;
         /**
-         * The array as length equals to the number of tapes of the Turing machine that generated this Output object.
-         * It contains the position of all the heads on the tapes
+         * It contains the position of all the heads on the tapes when the Turing machine stopped.
+         * The array has length equals to the number of tapes of the Turing machine that generated this Output object
          */
         public final int[] heads;
         private Output(FINAL_STATE state, String[] tapes, int[] heads) {
@@ -90,14 +69,15 @@ public class Turing {
             return name().substring(0,1);
         }
     }
+    private static final char blankSymbol = '_', initialSymbol = '>';
     private static final char rightDirection = 'R', leftDirection = 'L', stopDirection = '-';
     private static final String initialState = "s";
     private final String input;
     private final int tapesNumber;
-    private final Map<String, Map<String, Map<String,ArrayList<String>>>> relations = new HashMap<>();
+    private final Map<String, Map<String, Map<String,List<String>>>> relations = new HashMap<>();
 
     /**
-     * Create a new Turing machine which implements the program specified by the content of the file <i>filePath</i>
+     * Creates a new Turing machine which implements the program specified by the content of the file <i>filePath</i>
      * @param filePath file path of the program of the Turing machine
      * @throws IOException
      * @throws TuringException
@@ -106,7 +86,7 @@ public class Turing {
     public Turing(String filePath) throws IOException, TuringException {
         BufferedReader br = new BufferedReader(new FileReader(filePath));
         String line, inp = "";
-        int tapesNum = 0;
+        int tapesNum = -1;
         boolean first = true;
         while ((line = br.readLine()) != null) {
             line = line.trim();
@@ -125,12 +105,12 @@ public class Turing {
             if(!oldConfig.substring(0,1).equals("(") || !oldConfig.substring(oldConfig.length()-1).equals(")"))
                 throw new TuringException("Malformed input: the following configuration must be enclosed between two brackets: " + line);
             oldConfig = oldConfig.substring(1, oldConfig.length()-1).replaceAll("\\.","").replaceAll(",", "").replaceAll(" ", "");
-            if(tapesNum == 0)
+            if(tapesNum == -1)
                 tapesNum = oldConfig.length();
             else if(tapesNum != oldConfig.length())
                 throw new TuringException("Malformed input: the number of tapes must be the same in all the instructions");
-            Map<String, Map<String, ArrayList<String>>> rel;
-            Map<String, ArrayList<String>> trans;
+            Map<String, Map<String, List<String>>> rel;
+            Map<String, List<String>> trans;
             if((rel=relations.get(state)) == null) {
                 rel = new HashMap<>();
                 trans = new HashMap<>();
@@ -139,14 +119,14 @@ public class Turing {
             String newConfig = split[2].trim();
             if(!newConfig.substring(0,1).equals("(") || !newConfig.substring(newConfig.length()-1).equals(")"))
                 throw new TuringException("Malformed input: the following relation must be enclosed between two brackets: " + line);
-            String[] c = newConfig.substring(1, newConfig.length()-1).split(",");
-            String newState = c[0];
+            split = newConfig.substring(1, newConfig.length()-1).split(",");
+            String newState = split[0];
             newConfig = "";
-            for(int i=1; i<c.length; i++)
-                newConfig += c[i].trim();
+            for(int i=1; i<split.length; i++)
+                newConfig += split[i].trim();
             if(newConfig.length() != tapesNum*2)
                 throw new TuringException("Malformed input: check the relation of the following line: " + line);
-            ArrayList<String> allConfig;
+            List<String> allConfig;
             if((allConfig=trans.get(newState)) == null)
                 allConfig = new ArrayList<>();
             allConfig.add(newConfig);
@@ -155,6 +135,8 @@ public class Turing {
             relations.put(state, rel);
         }
         this.input = inp;
+        if(tapesNum < 1)
+            throw new TuringException("Every Turing machine must have at least 1 tape");
         this.tapesNumber = tapesNum;
     }
 
@@ -168,12 +150,72 @@ public class Turing {
     }
 
     /**
-     * Returns the number of tapes in this Turing machine
+     * Returns the number of tapes of this Turing machine
      * @return the number of tapes of this Turing machine
      */
     
     public int getTapesNumber() {
         return tapesNumber;
+    }
+    
+    /**
+     * Generates the program of the Turing machine on-the-fly and returns it.
+     * @return the program of the Turing machine
+     */
+    public String getProgram() {
+        String[] states = new String[relations.size()];
+        relations.keySet().toArray(states);
+        Comparator<String> charComparator = (String a,String b) -> {
+            char[] x = a.toCharArray();
+            char[] y = b.toCharArray();
+            for(int i=0; i<Integer.min(x.length, y.length); i++) {
+                if(x[i] == initialSymbol)
+                    return -1;
+                if(y[i] == initialSymbol)
+                    return 1;
+                if(x[i] == blankSymbol)
+                    return -1;
+                if(y[i] == blankSymbol)
+                    return 1;
+                int tmp = Character.compare(x[i], y[i]);
+                if(tmp != 0)
+                    return tmp;
+            }
+            return 0;
+        };
+        Comparator<String> statesComparator = (a,b) -> {
+            if(a.equals(initialState))
+                return -1;
+            if(b.equals(initialState))
+                return 1;
+            return a.compareTo(b);
+        };
+        Arrays.sort(states,statesComparator);
+        String ret = "";
+        for(String state: states) {
+            Map<String, Map<String, List<String>>> trans = relations.get(state);
+            String[] conf = new String[trans.keySet().size()];
+            trans.keySet().toArray(conf);
+            Arrays.sort(conf, charComparator);
+            for(String configuration: conf) {
+                String hConf = configuration.replaceAll("", ", ");
+                hConf = hConf.substring(2, hConf.length()-2);
+                Map<String, List<String>> rel = trans.get(configuration);
+                String[] newStates = new String[rel.size()];
+                rel.keySet().toArray(newStates);
+                Arrays.sort(newStates, statesComparator);
+                for(String newState: newStates) {
+                    List<String> newConfigs = rel.get(newState);
+                    newConfigs.sort(charComparator);
+                    for(String newConfig: newConfigs) {
+                        String hRel = newConfig.replaceAll("", ", ");
+                        hRel = hRel.substring(2, hRel.length()-2);
+                        ret += state + "; (" + hConf  + "); (" + newState + "; " + hRel + ")\n";                                        
+                    }
+                }
+            }
+        }
+        return ret.substring(0, ret.length()-1);
     }
     
     private static String encodeCurrentConfiguration(String s) {
@@ -185,7 +227,7 @@ public class Turing {
     }
     
     /**
-     * Run a complete simulation
+     * Runs a complete simulation
      * @return a list of all the outputs of the simulation
      * @throws TuringException
      */
@@ -195,7 +237,7 @@ public class Turing {
     }
 
     /**
-     * Run a complete simulation with a customized input 
+     * Runs a complete simulation with a customized input 
      * @param input customized input without initial symbol
      * @return a list of all the outputs of the simulation
      * @throws TuringException
@@ -206,9 +248,9 @@ public class Turing {
     }
     
     /**
-     * Run a simulation
+     * Runs an optimized or a complete simulation
      * @param optimize true if don't want to re-execute branches, false otherwise 
-     * @return a list of all the outputs of the simulation
+     * @return a list of all the outputs of the simulation (if <i>optimize</i> is true then the list will contains only the executed branches outputs)
      * @throws TuringException
      */
     
@@ -217,10 +259,10 @@ public class Turing {
     }
     
     /**
-     * Run an optimized or a complete simulation with a customized input
+     * Runs an optimized or a complete simulation with a customized input
      * @param input customized input without initial symbol
      * @param optimize true if don't want to re-execute branches, false otherwise 
-     * @return a list of all the outputs of the simulation
+     * @return a list of all the outputs of the simulation (if <i>optimize</i> is true then the list will contains only the executed branches outputs)
      * @throws TuringException
      */
     
@@ -228,20 +270,23 @@ public class Turing {
         String[] tapes = new String[tapesNumber];
         int[] heads = new int[tapesNumber];
         for(int i=0; i<tapes.length; i++) {
-            tapes[i] = ">" + (i==0 ? input : "");
+            tapes[i] = initialSymbol + (i==0 ? input : "");
             heads[i] = 0;
         }
-        List<Output> output = new ArrayList<>();
-        run(tapes, heads, initialState, output, optimize ? new HashSet<Stack>() : null);
+        List<Output> output;
+        Set<Bulk> set;
+        run(tapes, heads, initialState, (output=new ArrayList<>()), optimize ? (set=new HashSet<>()) : (set=null));
+        if(set != null)
+            set.clear();
         return output;
     }
     
-    private void run(String[] tapes, int[] heads, String state, List<Output> output, Set<Stack> yetExecuted) throws TuringException {
+    private void run(String[] tapes, int[] heads, String state, List<Output> output, Set<Bulk> yetExecuted) throws TuringException {
         if(yetExecuted != null) {
-            Stack s = new Stack(state, tapes, heads);
-            if(yetExecuted.contains(s))
+            Bulk b;
+            if(yetExecuted.contains((b=new Bulk(state, tapes, heads))))
                 return;
-            yetExecuted.add(s);
+            yetExecuted.add(b);
         }
         FINAL_STATE retState = null;
         if(state.equals(FINAL_STATE.YES.toString()))
@@ -254,19 +299,19 @@ public class Turing {
             output.add(new Output(retState, tapes, heads));
             return;
         }
-        Map<String, Map<String, ArrayList<String>>> config;
-        Map<String, ArrayList<String>> go;
+        Map<String, Map<String, List<String>>> config;
+        Map<String, List<String>> go;
         if((config=relations.get(state)) == null)
             throw new TuringException("Cannot find state " + state);
         char[] curr = new char[tapes.length];
         String conf = "";
         for(int i=0; i<tapes.length; i++) {
-            if(tapes[i].length() < heads[i])
-                tapes[i] += "_";
+            if(tapes[i].length() <= heads[i])
+                tapes[i] += blankSymbol;
             curr[i] = tapes[i].charAt(heads[i]);
         }
         for(char c: curr)
-            conf += c + "";
+            conf += c;
         if((go=config.get(conf)) == null)
             throw new TuringException("It is not defined what to do from state " + state + " with configuration " + encodeCurrentConfiguration(conf));
         for(String newState: go.keySet()) {
@@ -281,17 +326,14 @@ public class Turing {
                 for(int m=0, j=0; j<tmp.length; j+=2, m++) {
                     char dir = tmp[j+1];
                     newTapes[m] = newTapes[m].substring(0,newHeads[m])+tmp[j]+newTapes[m].substring(newHeads[m]+1);
-                    if(dir == rightDirection) {
+                    if(dir == rightDirection)
                         newHeads[m]++;
-                        if(newHeads[m] == newTapes[m].length())
-                            newTapes[m] += "_";
-                    } else if(dir == leftDirection) {
-                        newHeads[m]--;
-                        if(newHeads[m] == -1)
+                    else if(dir == leftDirection) {
+                        if(newHeads[m] == 0)
                             throw new TuringException("Cannot go before the universe!");
-                    } else if(dir != stopDirection) {
+                        newHeads[m]--;
+                    } else if(dir != stopDirection)
                         throw new TuringException("Cannot understand the following direction: " + dir);
-                    }
                 }
                 run(newTapes, newHeads, newState, output, yetExecuted);
             }
@@ -301,8 +343,8 @@ public class Turing {
     /**
         This exception may be thrown by:
         * <ul>
-        * <li>Turing constructor, if the input file is a malformed input;</li>
-        * <li>Turing run methods, if the program has an error</li>
+        * <li>Turing constructor, if the input file contains a malformed input;</li>
+        * <li>Turing runs methods, if the program has an error</li>
         * </ul>
      */
     public final class TuringException extends RuntimeException {

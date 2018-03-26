@@ -8,18 +8,19 @@ import complexity.Utils;
 
 /**
  * A simple example
+ * 
  * @author Mirko Alicastro
  * @link https://github.com/mirkoalicastro/turing
- * @version 1.0
  */
+
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         String fileName = "src//complexity//input.txt";
         Turing machine;
         List<Turing.Output> outputs;
         try {
             machine = new Turing(fileName);
-            outputs = machine.run();
+            outputs = machine.run(true);
             System.out.println(outputs);
             System.out.println("The turing machine has " + machine.getTapesNumber() + " tapes");
             if(Utils.containsAtLeast(outputs, Turing.FINAL_STATE.YES))
@@ -30,5 +31,4 @@ public class Main {
             System.out.println(e);
         }
     }
-        
 }
