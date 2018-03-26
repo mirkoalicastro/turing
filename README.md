@@ -9,7 +9,7 @@ be performed for any given situation.</p>
 <h3><a id="What_is_it_7"></a>What is it?</h3>
 <p>It’s just another Turing machine simulator. It can handle non-deterministic events and there is no limit to tapes number.</p>
 <h3><a id="Development_10"></a>Development</h3>
-<p>I wrote the Java code in 2 hours, more or less. So don’t consider it perfect, but it could be a good starting point for a more complete and complex Turing machine simulator.</p>
+<p>It could be a good starting point for a more complete and complex Turing machine simulator.</p>
 <p>If you find a bug or just want to contribute to the project, feel free to help or contact me by mail: <a href="mailto:mirkoalicastro@gmail.com">mirkoalicastro@gmail.com</a>. It would be very appreciate!</p>
 <h3><a id="Syntax_15"></a>Syntax</h3>
 <p>The first line of the program file must be the input (without starting symbol).<br>
