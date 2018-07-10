@@ -64,7 +64,7 @@ Then, each line consists of:</p>
 </tbody>
 </table>
 <h4><a id="An_example_39"></a>An example</h4>
-<p>Check if a binary string is a palindrome one.</p>
+<p>Check if a binary string is <u>not</u> a palindrome one.</p>
 <pre><code>001100
 s; (&gt;, &gt;); (s, &gt;, R, &gt;, R)
 s; (1, _); (s, 1, R, _, -)
